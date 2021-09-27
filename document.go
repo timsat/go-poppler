@@ -9,7 +9,6 @@ import "C"
 
 type Document struct {
 	doc                poppDoc
-	openedPopplerPages []*C.struct__PopplerPage
 }
 
 type DocumentInfo struct {
@@ -41,7 +40,6 @@ func (d *Document) GetNPages() int {
 
 func (d *Document) GetPage(i int) (page *Page) {
 	p := C.poppler_document_get_page(d.doc, C.int(i))
-	d.openedPopplerPages = append(d.openedPopplerPages, p)
 	return &Page{p: p}
 }
 
@@ -54,10 +52,10 @@ func (d *Document) GetNAttachments() int {
 }
 
 func (d *Document) Close() {
-	for i := 0; i < len(d.openedPopplerPages); i++ {
-		C.g_object_unref(C.gpointer(d.openedPopplerPages[i]))
-	}
-	d.openedPopplerPages = []*C.struct__PopplerPage{}
+	//for i := 0; i < len(d.openedPopplerPages); i++ {
+	//	C.g_object_unref(C.gpointer(d.openedPopplerPages[i].p))
+	//}
+	//d.openedPopplerPages = []*C.struct__PopplerPage{}
 	C.g_object_unref(C.gpointer(d.doc))
 }
 

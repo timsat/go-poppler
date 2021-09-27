@@ -29,7 +29,6 @@ func Open(filename string) (doc *Document, err error) {
 	}
 	doc = &Document{
 		doc:                d,
-		openedPopplerPages: []*C.struct__PopplerPage{},
 	}
 	return
 }
