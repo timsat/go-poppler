@@ -9,7 +9,9 @@ import "C"
 
 import (
 	"errors"
+	_ "log"
 	"path/filepath"
+	"runtime"
 	"unsafe"
 )
 
@@ -28,9 +30,10 @@ func Open(filename string) (doc *Document, err error) {
 		err = errors.New(C.GoString((*C.char)(e.message)))
 	}
 	doc = &Document{
-		doc:                d,
-		openedPopplerPages: []*C.struct__PopplerPage{},
+		doc: d,
 	}
+	//Ensure C memory is freed even if the user forgets to call Close()
+	runtime.SetFinalizer(doc, closeDocument)
 	return
 }
 
@@ -44,8 +47,11 @@ func Load(data []byte) (doc *Document, err error) {
 		err = errors.New(C.GoString((*C.char)(e.message)))
 	}
 	doc = &Document{
-		doc: d,
+		doc:   d,
+		bytes: b,
 	}
+	//Ensure C memory is freed even if the user forgets to call Close()
+	runtime.SetFinalizer(doc, closeDocument)
 	return
 }
 

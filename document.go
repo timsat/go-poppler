@@ -6,10 +6,15 @@ package poppler
 // #include <glib.h>
 // #include <unistd.h>
 import "C"
+import (
+	_ "log"
+	"runtime"
+)
 
 type Document struct {
-	doc                poppDoc
-	openedPopplerPages []*C.struct__PopplerPage
+	doc poppDoc
+	//needed to keep track of C memory when doc was created by poppler.Load()
+	bytes *C.GBytes
 }
 
 type DocumentInfo struct {
@@ -41,8 +46,11 @@ func (d *Document) GetNPages() int {
 
 func (d *Document) GetPage(i int) (page *Page) {
 	p := C.poppler_document_get_page(d.doc, C.int(i))
-	d.openedPopplerPages = append(d.openedPopplerPages, p)
-	return &Page{p: p}
+	page = &Page{p: p}
+	//Make sure the C memory gets freed at some point
+	//even if the user doesn't call p.Close():
+	runtime.SetFinalizer(page, closePage)
+	return
 }
 
 func (d *Document) HasAttachments() bool {
@@ -53,12 +61,19 @@ func (d *Document) GetNAttachments() int {
 	return int(C.poppler_document_get_n_attachments(d.doc))
 }
 
+//Close releases memory allocated by Poppler
 func (d *Document) Close() {
-	for i := 0; i < len(d.openedPopplerPages); i++ {
-		C.g_object_unref(C.gpointer(d.openedPopplerPages[i]))
-	}
-	d.openedPopplerPages = []*C.struct__PopplerPage{}
+	//GC shouldn't try to free C memory that has been freed already:
+	runtime.SetFinalizer(d, nil)
+	closeDocument(d)
+}
+
+func closeDocument(d *Document) {
 	C.g_object_unref(C.gpointer(d.doc))
+	if d.bytes != nil {
+		//d was created by poppler.Load(), so free the underlying data:
+		C.g_bytes_unref(d.bytes)
+	}
 }
 
 /*

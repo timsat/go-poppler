@@ -4,7 +4,10 @@ package poppler
 // #include <poppler.h>
 // #include <glib.h>
 import "C"
-import "unsafe"
+import (
+	"runtime"
+	"unsafe"
+)
 
 //import "fmt"
 
@@ -130,6 +133,13 @@ func (p *Page) TextLayoutAndAttrs() (result []TextEl) {
 	return
 }
 
+//Close frees memory allocated when Poppler opened the page
 func (p *Page) Close() {
+	//GC/finalizer shouldn't try to free C memory that has been freed already
+	runtime.SetFinalizer(p, nil)
+	closePage(p)
+}
+
+func closePage (p *Page) {
 	C.g_object_unref(C.gpointer(p.p))
 }
