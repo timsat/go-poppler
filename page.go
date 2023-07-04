@@ -41,6 +41,7 @@ func (p *Page) Close() {
 	//GC/finalizer shouldn't try to free C memory that has been freed already
 	runtime.SetFinalizer(p, nil)
 	closePage(p)
+	p.p = nil
 }
 
 func closePage(p *Page) {

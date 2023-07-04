@@ -73,7 +73,9 @@ func closeDocument(d *Document) {
 	if d.bytes != nil {
 		//d was created by poppler.Load(), so free the underlying data:
 		C.g_bytes_unref(d.bytes)
+		d.bytes = nil
 	}
+	d.doc = nil
 }
 
 /*

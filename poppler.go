@@ -45,6 +45,7 @@ func Load(data []byte) (doc *Document, err error) {
 	d = C.poppler_document_new_from_bytes(b, nil, &e)
 	if e != nil {
 		err = errors.New(C.GoString((*C.char)(e.message)))
+		C.g_bytes_unref(b)
 	}
 	doc = &Document{
 		doc:   d,
