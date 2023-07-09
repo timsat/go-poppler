@@ -4,9 +4,12 @@ package poppler
 // #include <unistd.h>
 // #include <stdlib.h>
 import "C"
+import "unsafe"
 
 func toString(in *C.gchar) string {
-	return C.GoString((*C.char)(in))
+	str := C.GoString((*C.char)(in))
+	C.free(unsafe.Pointer(in))
+	return str
 }
 
 func toBool(in C.gboolean) bool {
