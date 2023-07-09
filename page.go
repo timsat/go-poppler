@@ -6,6 +6,7 @@ package poppler
 import "C"
 import (
 	"runtime"
+	"unsafe"
 )
 
 //import "fmt"
@@ -15,7 +16,10 @@ type Page struct {
 }
 
 func (p *Page) Text() string {
-	return C.GoString(C.poppler_page_get_text(p.p))
+	cCharPtr := C.poppler_page_get_text(p.p)
+	pageText := C.GoString(cCharPtr)
+	C.free(unsafe.Pointer(cCharPtr))
+	return pageText
 }
 
 func (p *Page) Size() (width, height float64) {
