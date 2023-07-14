@@ -13,8 +13,6 @@ import (
 
 type Document struct {
 	doc poppDoc
-	//needed to keep track of C memory when doc was created by poppler.Load()
-	bytes *C.GBytes
 }
 
 type DocumentInfo struct {
@@ -70,12 +68,6 @@ func (d *Document) Close() {
 
 func closeDocument(d *Document) {
 	C.g_object_unref(C.gpointer(d.doc))
-	if d.bytes != nil {
-		//d was created by poppler.Load(), so free the underlying data:
-		C.g_bytes_unref(d.bytes)
-		d.bytes = nil
-	}
-	d.doc = nil
 }
 
 /*
