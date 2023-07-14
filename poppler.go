@@ -24,8 +24,7 @@ func Open(filename string) (doc *Document, err error) {
 	}
 	var e *C.GError
 	fn := C.g_filename_to_uri((*C.gchar)(C.CString(filename)), nil, nil)
-	var d poppDoc
-	d = C.poppler_document_new_from_file((*C.char)(fn), nil, &e)
+	var d poppDoc = C.poppler_document_new_from_file((*C.char)(fn), nil, &e)
 	if e != nil {
 		err = errors.New(C.GoString((*C.char)(e.message)))
 	}
