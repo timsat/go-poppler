@@ -46,7 +46,22 @@ func Load(data []byte) (doc *Document, err error) {
 		err = errors.New(C.GoString((*C.char)(e.message)))
 	}
 	doc = &Document{
-		doc:   d,
+		doc: d,
+	}
+	//Ensure C memory is freed even if the user forgets to call Close()
+	runtime.SetFinalizer(doc, closeDocument)
+	return
+}
+
+func LoadFromFd(fd uintptr) (doc *Document, err error) {
+	var e *C.GError
+
+	d := C.poppler_document_new_from_fd((C.int)(fd), nil, &e)
+	if e != nil {
+		err = errors.New(C.GoString((*C.char)(e.message)))
+	}
+	doc = &Document{
+		doc: d,
 	}
 	//Ensure C memory is freed even if the user forgets to call Close()
 	runtime.SetFinalizer(doc, closeDocument)
