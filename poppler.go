@@ -10,6 +10,7 @@ import "C"
 import (
 	"errors"
 	_ "log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"unsafe"
@@ -53,7 +54,10 @@ func Load(data []byte) (doc *Document, err error) {
 	return
 }
 
-func LoadFromFd(fd uintptr) (doc *Document, err error) {
+// loadFromFd constructs a Poppler document from a file descriptor.
+// The associated file must be opened for reading and must not be closed by the user
+// as it is beeing closed by Poppler at some point.
+func loadFromFd(fd uintptr) (doc *Document, err error) {
 	var e *C.GError
 
 	d := C.poppler_document_new_from_fd((C.int)(fd), nil, &e)
@@ -66,6 +70,15 @@ func LoadFromFd(fd uintptr) (doc *Document, err error) {
 	//Ensure C memory is freed even if the user forgets to call Close()
 	runtime.SetFinalizer(doc, closeDocument)
 	return
+}
+
+// LoadFromFile constructs a Poppler document from a os.File.
+// I experienced strange effects using this under high concurrency...
+func LoadFromFile(f *os.File) (doc *Document, err error) {
+
+	doc, err = loadFromFd(f.Fd())
+	doc.fd = f
+	return 
 }
 
 func Version() string {

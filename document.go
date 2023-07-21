@@ -7,12 +7,15 @@ package poppler
 // #include <unistd.h>
 import "C"
 import (
-	_ "log"
+	"log"
+	"os"
 	"runtime"
 )
 
 type Document struct {
 	doc poppDoc
+	// keep this so it does not get GCed
+	fd *os.File
 }
 
 type DocumentInfo struct {
@@ -59,7 +62,7 @@ func (d *Document) GetNAttachments() int {
 	return int(C.poppler_document_get_n_attachments(d.doc))
 }
 
-//Close releases memory allocated by Poppler
+//Close releases memory and ressources allocated by Poppler
 func (d *Document) Close() {
 	//GC shouldn't try to free C memory that has been freed already:
 	runtime.SetFinalizer(d, nil)
@@ -68,6 +71,10 @@ func (d *Document) Close() {
 
 func closeDocument(d *Document) {
 	C.g_object_unref(C.gpointer(d.doc))
+	if d.fd != nil {
+		log.Printf("Closing FD %d", d.fd.Fd())
+		d.fd.Close()
+	}
 }
 
 /*
